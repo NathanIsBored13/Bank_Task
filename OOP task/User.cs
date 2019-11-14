@@ -26,6 +26,10 @@ public class User
         foreach (Bank_Account Account in Accounts) ret.Add(Account.Get_Name());
         return ret;
     }
+    public void Logged_In()
+    {
+
+    }
     private static string Hash(string data, int salt)
     {
         using (SHA256 sha256Hash = SHA256.Create())

@@ -3,25 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 public class Bank
 {
-    private List<User> Accounts;
-    public Bank()
+    private List<User> users;
+    public Bank(Reader reader)
 	{
-        Accounts = new List<User>();
+        users = new List<User>();
+        foreach (string path in reader.Get_Contents()) users.Add(new User(reader.ReadFile(path), reader));
+        if (users.Count() == 0)
+        {
+            Console.WriteLine("No users exist, Please create one");
+            Make_User(reader);
+        }
 	}
-    public void Make_Account()
+    public void Make_User(Reader reader)
     {
-        string Username = null, Holder_Name = null, Password = null, input;
+        string username = null, holder_name = null, password = null, input;
         do
         {
             Console.Write("\nPlese enter your full name: ");
-            Holder_Name = Console.ReadLine();
+            holder_name = Console.ReadLine();
             do
             {
                 Console.Write("\nChose a username: ");
                 input = Console.ReadLine();
-                if (!Accounts.Any(x => x.Get_Username() == input)) Username = input;
+                if (!users.Any(x => x.Get_Username() == input)) username = input;
                 else Console.WriteLine("This username already exists, please pick a different one");
-            } while (Username == null);
+            } while (username == null);
             do
             {
                 Console.Write("\nEnter a strong password: ");
@@ -37,18 +43,18 @@ public class Bank
                 }
                 else
                 {
-                    Password = input;
+                    password = input;
                     Console.Write("\nRe-enter your password: ");
                     input = Console.ReadLine();
-                    if (input != Password) Console.WriteLine("Passwords do not match, try again");
+                    if (input != password) Console.WriteLine("Passwords do not match, try again");
                 }
-            } while (Password != input);
-            Console.Write("\nPlease confirm this data:\nYour name = {0},\nUsername = {1},\n[Y/N]: ", Holder_Name, Username);
+            } while (password != input);
+            Console.Write("\nPlease confirm this data:\nYour name = {0},\nUsername = {1},\n[Y/N]: ", holder_name, username);
             input = Console.ReadLine().ToLower();
             if (!new string[] { "y", "n" }.Contains(input)) Console.WriteLine("Please only enter 'y' or 'n'");
         } while (input != "y");
-        Accounts.Add(new User(Username, Holder_Name, Password));
-        Console.WriteLine("\nAccount {0} created sucsessfuly\n", Username);
+        users.Add(new User(username, holder_name, password, reader));
+        Console.WriteLine("\nAccount {0} created sucsessfuly\n", username);
     }
     public bool Login()
     {
@@ -58,24 +64,25 @@ public class Bank
         {
             Console.Write("\nEnter your username name:");
             input = Console.ReadLine();
-            for (int i = 0; i < Accounts.Count; i++)
+            for (int i = 0; i < users.Count; i++)
             {
-                if (Accounts[i].Get_Username() == input) index = i;
+                if (users[i].Get_Username() == input) index = i;
             }
             if (index == -1) Console.WriteLine("This Bank Account is not registared, try again");
         } while (index == -1);
         do
         {
-            Console.Write("\nHello {0}, please enter your Password:", Accounts[index].Get_Holder_Name());
+            Console.Write("\nHello {0}, please enter your Password:", users[index].Get_Holder_Name());
             input = Console.ReadLine();
-            if (!Accounts[index].Check_Password(input)) Console.WriteLine("That is not the password for this account");
-        } while (!Accounts[index].Check_Password(input));
-        Accounts[index].Selected();
+            if (!users[index].Check_Password(input)) Console.WriteLine("That is not the password for this account");
+        } while (!users[index].Check_Password(input));
+        users[index].Selected();
         do
         {
             Console.Write("\nDo you wish to [L]ogin as another user or [E]xit: ");
             input = Console.ReadLine().ToLower();
-            if (!new string[] { "l", "e" }.Contains(input)) Console.Write("Please only enter 'l' or 'e'");
+            if (input == "l") Console.WriteLine();
+            else if (input != "e") Console.Write("Please only enter 'l' or 'e'");
         } while (!new string[] { "l", "e" }.Contains(input));
         return input == "e";
     }

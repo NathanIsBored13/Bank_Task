@@ -7,7 +7,7 @@ public class Bank
     public Bank(Reader reader)
 	{
         users = new List<User>();
-        foreach (string path in reader.Get_Contents()) users.Add(new User(reader.ReadFile(path), reader));
+        foreach (string path in reader.Get_Contents()) users.Add(new User(reader.ReadFile(path), reader, this));
         if (users.Count() == 0)
         {
             Console.WriteLine("No users exist, Please create one");
@@ -53,7 +53,7 @@ public class Bank
             input = Console.ReadLine().ToLower();
             if (!new string[] { "y", "n" }.Contains(input)) Console.WriteLine("Please only enter 'y' or 'n'");
         } while (input != "y");
-        users.Add(new User(username, holder_name, password, reader));
+        users.Add(new User(username, holder_name, password, reader, this));
         Console.WriteLine("\nAccount {0} created sucsessfuly\n", username);
     }
     public bool Login()
@@ -85,5 +85,15 @@ public class Bank
             else if (input != "e") Console.Write("Please only enter 'l' or 'e'");
         } while (!new string[] { "l", "e" }.Contains(input));
         return input == "e";
+    }
+    public bool Transfer_Money(string account, double amount)
+    {
+        bool found = false;
+        for (int i = 0; i < users.Count(); i++)
+        {
+            if (users[i].Has_Account(account)) users[i].Add_Money(account, amount);
+            found = true;
+        }
+        return found;
     }
 }

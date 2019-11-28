@@ -4,15 +4,15 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using System.Collections.Generic;
-
 public class User
 {
     private string username, holder_name;
     private int salt;
     private string password_hash;
     Reader reader;
+    Bank parent;
     List<Bank_Account> accounts;
-    public User(string username, string holder_name, string password, Reader reader)
+    public User(string username, string holder_name, string password, Reader reader, Bank parent)
     {
         accounts = new List<Bank_Account>();
         Random random = new Random();
@@ -21,9 +21,10 @@ public class User
         salt = random.Next(0, 100);
         password_hash = Hash(password, salt);
         this.reader = reader;
+        this.parent = parent;
         Write_All();
 	}
-    public User (string[] file, Reader reader)
+    public User (string[] file, Reader reader, Bank parent)
     {
         accounts = new List<Bank_Account>();
         username = file[0];
@@ -31,10 +32,11 @@ public class User
         salt = Convert.ToInt32(file[2]);
         password_hash = file[3];
         this.reader = reader;
+        this.parent = parent;
         for (int i = 4; i < file.Length; i++)
         {
             string[] buffer = file[i].Split(", ");
-            accounts.Add(new Bank_Account(buffer[0], double.Parse(buffer[1]), double.Parse(buffer[2])));
+            accounts.Add(new Bank_Account(buffer[0], double.Parse(buffer[1]), double.Parse(buffer[2]), this));
         }
     }
     public string Get_Username() => username;
@@ -80,7 +82,7 @@ public class User
             }
             else Console.WriteLine("Please only enter a decimal or intiger value.");
         } while (startup_funds == -1);
-        accounts.Add(new Bank_Account(account_name, startup_funds));
+        accounts.Add(new Bank_Account(account_name, startup_funds, this));
         Console.WriteLine("\nAccount {0} created sucsessfuly", account_name);
         Write_All();
     }
@@ -91,6 +93,9 @@ public class User
         for (int i = 0; i < accounts.Count(); i++) buffer[i] = accounts[i].Get_Values();
         File.AppendAllText(string.Format("{0}\\{1}.csv", reader.Get_Path(), username), string.Format("{0}\n{1}\n{2}\n{3}{4}{5}", username, holder_name, salt, password_hash, buffer.Length == 0? "" : "\n",string.Join("\n", buffer)));
     }
+    public bool Transfer_Money(string account, double amount) => parent.Transfer_Money(account, amount);
+    public bool Has_Account(string account) => accounts.Any(x => x.Get_UID() == account);
+    public void Add_Money(string account, double amount) => accounts.First(x => x.Get_UID() == account).Add_Money(amount);
     private List<string> Get_Account_Names()
     {
         List<string> ret = new List<string>();
